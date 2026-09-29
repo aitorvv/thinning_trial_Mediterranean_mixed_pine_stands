@@ -4,7 +4,7 @@
 
 ---
 
-<!-- :open_file_folder: Repository DOI: [![DOI](https://zenodo.org/badge/713296626.svg)](https://zenodo.org/doi/10.5281/zenodo.12772484) -->
+:open_file_folder: Repository DOI: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23037032.svg)](https://doi.org/10.5281/zenodo.23037032)
 
 <!-- 📜 Manuscript DOI:  ![DOI](https://img.shields.io/badge/DOI-European_Journal_of_Forest_Research-blue.svg?style=flat&labelColor=whitesmoke)](https://doi.org/10.1007/s10342-024-01752-3) -->
 
