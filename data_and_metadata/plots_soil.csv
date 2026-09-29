@@ -1,0 +1,5 @@
+plot_id,measurement_date,date_analysis,ph,organic_matter_percent,total_organic_matter_percent,p_mg_kg,k_mg_kg,n_total_percent,sand_percent_usda,silt_percent_usda,clay_percent_usda,texture_usda,coarse_fragments_percent,cec_meq_100g
+2434001,2021-05-06,2021-08-25,7.35,2.48,3.48,18.3,194,0.14,57.56,15.28,27.16,sandy clay loam,1.67,16.88
+2434002,2021-05-06,2021-08-25,7.66,1.43,2.04,1.7,285,0.09,55.56,18.28,26.16,sandy clay loam,24.09,21.25
+2434003,2021-05-06,2021-08-25,7.59,1.54,2.17,1.8,175,0.08,65.56,15.28,19.16,sandy loam,10.49,11.88
+2434004,2021-05-06,2021-08-25,7.28,1.89,2.4,2.8,155,0.09,65.56,15.28,19.16,sandy loam,0.14,17.81

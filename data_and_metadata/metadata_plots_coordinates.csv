@@ -1,0 +1,6 @@
+variable name,Access,Additional access information,description,type,unit,value range,special values,georeferencing system
+plot_id,plots_coordinates.csv,"Comma separated. Decimal separator "".""",Unique plot identification code,Numeric,dimensionless,,,
+stake_id,plots_coordinates.csv,,Identifier of the wooden stake delimiting the plot corners boundaries and central point (1 to 9),Integer,dimensionless,1 - 9,,
+x,plots_coordinates.csv,,X coordinate in UTM projection,Numeric,m,,,EPSG:25830 - ETRS89 / UTM zone 30N
+y,plots_coordinates.csv,,Y coordinate in UTM projection,Numeric,m,,,EPSG:25830 - ETRS89 / UTM zone 30N
+z,plots_coordinates.csv,,Elevation above sea level,Numeric,m,,,EPSG:25830 - ETRS89 / UTM zone 30N

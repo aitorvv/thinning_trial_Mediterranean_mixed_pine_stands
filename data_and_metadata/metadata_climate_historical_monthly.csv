@@ -1,0 +1,10 @@
+variable name,Access,Additional access information,description,type,unit,value range,special values,georeferencing system
+plot_id,climate_historical_monthly.csv,"Comma separated. Decimal separator "".""","Unique identifier for the sample plot (stand location, all plot with the same climatic values)",Character,dimensionless,,,
+latitude,climate_historical_monthly.csv,,Latitude coordinate in decimal degrees (WGS84),Numeric,decimal degrees,,,EPSG:4326 – WGS84
+longitude,climate_historical_monthly.csv,,Longitude coordinate in decimal degrees (WGS84),Numeric,decimal degrees,,,EPSG:4326 – WGS84
+year,climate_historical_monthly.csv,,Year of the historical weather observation,Integer,YYYY,1950-2025,,
+month,climate_historical_monthly.csv,,Month of the historical weather observation,Character,MM,1-12,,
+precipitation,climate_historical_monthly.csv,,Total monthly precipitation,Numeric,mm,,,
+t_max,climate_historical_monthly.csv,,Maximum monthly temperature,Numeric,°C,,,
+t_min,climate_historical_monthly.csv,,Minimum monthly temperature,Numeric,°C,,,
+t_avg,climate_historical_monthly.csv,,Average monthly temperature,Numeric,°C,,,

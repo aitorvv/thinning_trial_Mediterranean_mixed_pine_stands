@@ -1,0 +1,14 @@
+variable name,Access,Additional access information,description,type,unit,value range,special values,georeferencing system
+plot_id,climate_future_projections.csv,"Comma separated. Decimal separator "".""","Unique identifier for the sample plot (stand location, all plot with the same climatic values)",Character,dimensionless,,,
+latitude,climate_future_projections.csv,,Latitude coordinate in decimal degrees (WGS84),Numeric,decimal degrees,,,EPSG:4326 – WGS84
+longitude,climate_future_projections.csv,,Longitude coordinate in decimal degrees (WGS84),Numeric,decimal degrees,,,EPSG:4326 – WGS84
+model,climate_future_projections.csv,,CMIP6 Global Climate Model (GCM) used for projection,Character,dimensionless,,,
+ssp,climate_future_projections.csv,,Shared Socioeconomic Pathway (SSP) scenario,Character,dimensionless,1-5,,
+period,climate_future_projections.csv,,Future time period (e.g. 2021-2040),Character,YYYY-YYYY,,,
+band,climate_future_projections.csv,,Band index (representing a bioclimatic variable),Integer,dimensionless,1-19,,
+bioclimatic_variable,climate_future_projections.csv,,Bioclimatic variable value,Numeric,mixed,,,
+month,climate_future_projections.csv,,Month of the future climate projection,Character,MM,1-12,,
+t_min,climate_future_projections.csv,,Projected minimum monthly temperature,Numeric,°C,,,
+t_max,climate_future_projections.csv,,Projected maximum monthly temperature,Numeric,°C,,,
+t_avg,climate_future_projections.csv,,Projected average monthly temperature,Numeric,°C,,,
+precipitation,climate_future_projections.csv,,Projected total monthly precipitation,Numeric,mm,,,

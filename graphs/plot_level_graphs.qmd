@@ -1,0 +1,398 @@
+---
+title: "Ampudia - Figures for Data Paper"
+author: "Aitor Vázquez Veloso"
+date: "`r Sys.Date()`"
+format: html
+---
+
+# Summary
+
+This document generates and exports publication-ready high-resolution figures for the Ampudia Mediterranean mixed forest thinning trial data paper:
+
+1. **Stand-level metrics summary** (Density, Basal Area, Dominant Height, and Volume across plots and inventories).
+2. **Tree spatial distribution and status** (Color: Status, Shape: Species).
+3. **Tree spatial distribution and species** (Color: Species, Shape: Status).
+4. **Multi-scale geographical location map** (European context, Spanish context, and Stand plot distribution).
+
+```{r setup, include=FALSE}
+#| message: false
+#| warning: false
+# Core & Data Manipulation
+library(tidyverse)
+library(dplyr)
+
+# Visualization
+library(ggplot2)
+library(ggpubr)
+
+# Spatial & Mapping
+library(sf)
+library(maps)
+
+```
+
+## 1. Stand Level Metrics by Plot and Inventory
+
+```{r}
+#| message: false
+#| warning: false
+# Load dataset
+plots_desc_path <- ifelse(file.exists("../plots_description.csv"), "../plots_description.csv", "final/plots_description.csv")
+plots_desc <- read.csv(plots_desc_path)
+
+# Create simplified plot ID / label (0, 15, 30, 45 % thinning)
+plots_desc$plot_num <- factor(plots_desc$plot_id - 2434000, levels = 1:4, labels = c("control", "15", "30", "45"))
+
+# Prepare long-format data for faceted plotting
+plots_long <- plots_desc %>%
+  select(inventory_id, plot_num, n, g, ho, sfni_vcc) %>%
+  rename(
+    `N (trees/ha)` = n,
+    `G (m²/ha)` = g,
+    `Ho (m)` = ho,
+    `VCC (m³/ha)` = sfni_vcc
+  ) %>%
+  pivot_longer(
+    cols = c(`N (trees/ha)`, `G (m²/ha)`, `Ho (m)`, `VCC (m³/ha)`), 
+    names_to = "variable", 
+    values_to = "value"
+  ) %>%
+  mutate(variable = factor(variable, levels = c("N (trees/ha)", "G (m²/ha)", "Ho (m)", "VCC (m³/ha)")))
+
+# Create joint graph
+joint_plot <- ggplot(plots_long, aes(x = plot_num, y = value, fill = as.factor(inventory_id))) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  facet_wrap(~ variable, scales = "free_y") +
+  labs(
+    # title = "Stand level metrics per plot and inventory",
+    x = "Thinning intensity (%)",
+    y = NULL,
+    fill = "Inventory"
+  ) +
+  scale_fill_brewer(palette = "Dark2") +
+  theme_minimal() +
+  theme(
+    # plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    strip.text = element_text(face = "bold", size = 11),
+    legend.position = "bottom"
+  )
+
+print(joint_plot)
+
+# Save high-resolution publication figure
+ggsave(filename = "figure_1_stand_level_metrics.png", plot = joint_plot, dpi = 300, width = 8, height = 6)
+
+# Clean memory
+rm(plots_desc, plots_long, plots_desc_path)
+```
+
+## 2. Tree Spatial Distribution (Color: Status, Shape: Species)
+
+```{r fig.width=12, fig.height=12}
+#| message: false
+#| warning: false
+# Load tree inventory
+trees_inv_path <- ifelse(file.exists("../trees_inventory.csv"), "../trees_inventory.csv", "final/trees_inventory.csv")
+trees_inv <- read.csv(trees_inv_path)
+
+# Prepare spatial data for all inventories using tree_status
+trees_spatial_all <- trees_inv %>%
+  filter(!is.na(x) & !is.na(y)) %>%
+  mutate(
+    plot_num = factor(plot_id - 2434000, levels = 1:4, labels = c("control", "15", "30", "45")),
+    Status = case_when(
+      tree_status == "I" ~ "Ingrowth",
+      tree_status == "C" ~ "Harvested",
+      tree_status == "M" ~ "Dead",
+      TRUE ~ "Alive"
+    ),
+    Status = factor(Status, levels = c("Alive", "Ingrowth", "Harvested", "Dead"))
+  )
+
+# Reusable plot function (Version 1: Color = Status, Shape = Species)
+create_inv_plot_v1 <- function(inv_id, title) {
+  df <- trees_spatial_all %>% filter(inventory_id == inv_id)
+  
+  ggplot(df, aes(x = x, y = y, color = Status, shape = species_name)) +
+    geom_point(size = 2.5, alpha = 0.8) +
+    scale_color_manual(
+      values = c(
+        "Alive" = "#4daf4a",      # Green
+        "Ingrowth" = "#377eb8",   # Blue
+        "Harvested" = "#ff7f00",  # Orange
+        "Dead" = "#e41a1c"        # Red
+      ), 
+      drop = FALSE
+    ) +
+    scale_shape_manual(
+      breaks = c("Pinus halepensis", "Pinus pinea", "Cupressus sempervirens", "Quercus faginea", "Quercus ilex"),
+      values = c(
+        "Pinus halepensis" = 16,
+        "Pinus pinea" = 17,
+        "Cupressus sempervirens" = 18,
+        "Quercus faginea" = 15,
+        "Quercus ilex" = 3
+      ),
+      labels = c(
+        expression(italic("P. halepensis")),
+        expression(italic("P. pinea")),
+        expression(italic("C. sempervirens")),
+        expression(italic("Q. faginea")),
+        expression(italic("Q. ilex"))
+      ),
+      drop = FALSE
+    ) +
+    guides(
+      color = guide_legend(override.aes = list(shape = 16, size = 3)),
+      shape = guide_legend(override.aes = list(color = "black", size = 3))
+    ) +
+    labs(
+      title = title,
+      color = "Status: ",
+      shape = "Species: "
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+      axis.title = element_blank(),
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid = element_blank(),
+      panel.border = element_rect(color = "gray80", fill = NA),
+      legend.position = "bottom",
+      legend.box = "horizontal",
+      legend.text = element_text(size = 9),
+      legend.title = element_text(face = "bold", size = 9.5)
+    )
+}
+
+# Create individual plots
+p1_v1 <- create_inv_plot_v1(1, "Inventory 1 (2008)")
+p2_v1 <- create_inv_plot_v1(2, "Inventory 2 (2014)")
+p3_v1 <- create_inv_plot_v1(3, "Inventory 3 (2023)")
+
+# Extract complete legend from p2 (contains all statuses)
+legend_grob_v1 <- get_legend(p2_v1 + theme(legend.position = "bottom", legend.box = "horizontal"))
+
+# Combine plots with legend
+plots_v1 <- ggarrange(p1_v1, p2_v1, p3_v1, nrow = 3, ncol = 1, legend = "none")
+combined_map_v1 <- ggarrange(plots_v1, legend_grob_v1, nrow = 2, heights = c(1, 0.1))
+
+print(combined_map_v1)
+
+# Save high-resolution publication figure
+ggsave(filename = "figure_2_tree_spatial_distribution_status.png", plot = combined_map_v1, dpi = 300, width = 10, height = 10)
+
+# Clean memory
+rm(p1_v1, p2_v1, p3_v1, legend_grob_v1, plots_v1, create_inv_plot_v1, trees_inv_path)
+```
+
+## 3. Tree Spatial Distribution (Color: Species, Shape: Status)
+
+```{r fig.width=12, fig.height=12}
+#| message: false
+#| warning: false
+# Reusable plot function (Version 2: Color = Species, Shape = Status)
+create_inv_plot_v2 <- function(inv_id, title) {
+  df <- trees_spatial_all %>% filter(inventory_id == inv_id)
+  
+  ggplot(df, aes(x = x, y = y, color = species_name, shape = Status)) +
+    geom_point(size = 2.5, alpha = 0.8) +
+    scale_color_manual(
+      breaks = c("Pinus halepensis", "Pinus pinea", "Cupressus sempervirens", "Quercus faginea", "Quercus ilex"),
+      values = c(
+        "Pinus halepensis" = "#1b9e77",
+        "Pinus pinea" = "#d95f02",
+        "Cupressus sempervirens" = "#7570b3",
+        "Quercus faginea" = "#e7298a",
+        "Quercus ilex" = "#66a61e"
+      ),
+      labels = c(
+        expression(italic("P. halepensis")),
+        expression(italic("P. pinea")),
+        expression(italic("C. sempervirens")),
+        expression(italic("Q. faginea")),
+        expression(italic("Q. ilex"))
+      ),
+      drop = FALSE
+    ) +
+    scale_shape_manual(
+      values = c(
+        "Alive" = 16,       # Solid circle
+        "Ingrowth" = 1,     # Empty circle
+        "Harvested" = 4,    # Cross 'x'
+        "Dead" = 8          # Asterisk
+      ), 
+      drop = FALSE
+    ) +
+    guides(
+      color = guide_legend(override.aes = list(shape = 16, size = 3)),
+      shape = guide_legend(override.aes = list(color = "black", size = 3))
+    ) +
+    labs(
+      title = title,
+      color = "Species: ",
+      shape = "Status: "
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+      axis.title = element_blank(),
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid = element_blank(),
+      panel.border = element_rect(color = "gray80", fill = NA),
+      legend.position = "bottom",
+      legend.box = "horizontal",
+      legend.text = element_text(size = 9),
+      legend.title = element_text(face = "bold", size = 9.5)
+    )
+}
+
+# Create individual plots
+p1_v2 <- create_inv_plot_v2(1, "Inventory 1 (2008)")
+p2_v2 <- create_inv_plot_v2(2, "Inventory 2 (2014)")
+p3_v2 <- create_inv_plot_v2(3, "Inventory 3 (2023)")
+
+# Extract complete legend from p2 (contains all statuses)
+legend_grob_v2 <- get_legend(p2_v2 + theme(legend.position = "bottom", legend.box = "horizontal"))
+
+# Combine plots with legend
+plots_v2 <- ggarrange(p1_v2, p2_v2, p3_v2, nrow = 3, ncol = 1, legend = "none")
+combined_map_v2 <- ggarrange(plots_v2, legend_grob_v2, nrow = 2, heights = c(1, 0.1))
+
+print(combined_map_v2)
+
+# Save high-resolution publication figure
+ggsave(filename = "figure_3_tree_spatial_distribution_species.png", plot = combined_map_v2, dpi = 300, width = 10, height = 10)
+
+# Clean memory
+rm(trees_inv, trees_spatial_all, p1_v2, p2_v2, p3_v2, legend_grob_v2, plots_v2, create_inv_plot_v2)
+```
+
+## 4. Study Site Location Map (Europe, Spain, and Stand scale)
+
+```{r fig.width=12, fig.height=8}
+#| message: false
+#| warning: false
+# 1. Site Coordinates (Ampudia, Palencia, Spain)
+site_coords_utm <- data.frame(x = 353050, y = 4636120)
+site_sf_utm <- st_as_sf(site_coords_utm, coords = c("x", "y"), crs = 25830)
+site_sf_wgs84 <- st_transform(site_sf_utm, crs = 4326)
+
+# 2. Map A: European Context
+world_map <- map_data("world")
+map_europe <- ggplot() +
+  geom_polygon(data = world_map, aes(x = long, y = lat, group = group), 
+               fill = "gray92", color = "gray75", linewidth = 0.2) +
+  geom_polygon(data = subset(world_map, region == "Spain"), 
+               aes(x = long, y = lat, group = group), 
+               fill = "gray80", color = "gray60", linewidth = 0.3) +
+  geom_sf(data = site_sf_wgs84, color = "red", size = 2.5, shape = 19) +
+  coord_sf(xlim = c(-12, 28), ylim = c(34, 60), expand = FALSE) +
+  labs(title = "a) European context") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_line(color = "gray95"),
+    panel.border = element_rect(color = "gray70", fill = NA)
+  )
+
+# 3. Map B: Spanish Context
+auton_path <- ifelse(
+  file.exists("layers/ll_autonomicas_inspire_peninbal_etrs89.shp"),
+  "layers/ll_autonomicas_inspire_peninbal_etrs89.shp",
+  "../../tmp_files/location_map/layers/ll_autonomicas_inspire_peninbal_etrs89.shp"
+)
+
+if (file.exists(auton_path)) {
+  spain_sf <- st_read(auton_path, quiet = TRUE)
+  map_spain <- ggplot() +
+    geom_sf(data = spain_sf, fill = "gray95", color = "gray70", linewidth = 0.3) +
+    geom_sf(data = site_sf_utm, color = "red", size = 3, shape = 19) +
+    geom_sf_text(data = site_sf_utm, label = " Ampudia (Palencia)", 
+                 hjust = -0.1, vjust = 0.5, fontface = "bold", size = 3.5) +
+    coord_sf(expand = FALSE) +
+    labs(title = "b) Spanish context") +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 12),
+      axis.title = element_blank(),
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid = element_blank(),
+      panel.border = element_rect(color = "gray70", fill = NA)
+    )
+} else {
+  map_spain <- ggplot() +
+    geom_polygon(data = subset(world_map, region %in% c("Spain", "Portugal")), 
+                 aes(x = long, y = lat, group = group), 
+                 fill = "gray95", color = "gray70", linewidth = 0.3) +
+    geom_sf(data = site_sf_wgs84, color = "red", size = 3, shape = 19) +
+    geom_sf_text(data = site_sf_wgs84, label = " Ampudia (Palencia)", 
+                 hjust = -0.1, vjust = 0.5, fontface = "bold", size = 3.5) +
+    coord_sf(xlim = c(-10, 4.5), ylim = c(35.5, 44), expand = FALSE) +
+    labs(title = "b) Spanish context") +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 12),
+      axis.title = element_blank(),
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid = element_blank(),
+      panel.border = element_rect(color = "gray70", fill = NA)
+    )
+}
+
+# 4. Map C: Stand Plots Distribution ("En la masa")
+plots_shp_path <- ifelse(
+  file.exists("plots_limits/parcelas_Ampudia_etrs89_30n.shp"),
+  "plots_limits/parcelas_Ampudia_etrs89_30n.shp",
+  "final/graphs/plots_limits/parcelas_Ampudia_etrs89_30n.shp"
+)
+
+if (file.exists(plots_shp_path)) {
+  plots_sf <- st_read(plots_shp_path, quiet = TRUE)
+  
+  # Assign clear thinning intensity labels with ordered levels
+  plots_sf$thinning <- c("Plot 1 (0% Control)", "Plot 4 (45% Thinning)", "Plot 2 (15% Thinning)", "Plot 3 (30% Thinning)")
+  plots_sf$thinning <- factor(
+    plots_sf$thinning,
+    levels = c("Plot 1 (0% Control)", "Plot 2 (15% Thinning)", "Plot 3 (30% Thinning)", "Plot 4 (45% Thinning)")
+  )
+  
+  map_stand <- ggplot() +
+    geom_sf(data = plots_sf, aes(fill = thinning), alpha = 0.4, color = "gray30", linewidth = 0.6) +
+    geom_sf_text(data = plots_sf, aes(label = thinning), fontface = "bold", size = 3.2, vjust = -0.5) +
+    scale_fill_brewer(palette = "YlOrRd", name = "Treatment") +
+    labs(
+      title = "c) Experimental plots distribution (ETRS89 / UTM 30N)",
+      x = "UTM X (m)",
+      y = "UTM Y (m)"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 12),
+      legend.position = "none",
+      axis.text = element_text(size = 8),
+      panel.border = element_rect(color = "gray70", fill = NA)
+    )
+}
+
+# 5. Assemble multi-scale location figure
+left_panel <- ggarrange(map_europe, map_spain, nrow = 2, ncol = 1)
+location_map_full <- ggarrange(left_panel, map_stand, ncol = 2, widths = c(1, 1.3))
+
+print(location_map_full)
+
+# Save high-resolution publication figure
+ggsave(filename = "figure_4_study_site_location_map.png", plot = location_map_full, dpi = 300, width = 11, height = 7)
+
+# Clean memory
+rm(site_coords_utm, site_sf_utm, site_sf_wgs84, world_map, map_europe, map_spain, map_stand, left_panel, auton_path, plots_shp_path)
+if (exists("spain_sf")) rm(spain_sf)
+if (exists("plots_sf")) rm(plots_sf)
+```
