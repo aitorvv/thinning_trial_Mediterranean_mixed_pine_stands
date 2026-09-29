@@ -1,0 +1,20 @@
+cff-version: 1.0.0
+message: "If you use this resources, please cite it as below."
+authors:
+- family-names: "Vázquez-Veloso"
+  given-names: "Aitor"
+  orcid: "https://orcid.org/0000-0003-0227-506X"
+- family-names: "Ordóñez"
+  given-names: "Cristóbal"
+  orcid: "https://orcid.org/0000-0001-5354-3760 "
+- family-names: "Lara"
+  given-names: "Wilson"
+  orcid: "https://orcid.org/0000-0003-3527-1380"
+- family-names: "Bravo"
+  given-names: "Felipe"
+  orcid: "https://orcid.org/0000-0001-7348-6695"
+title: 'Code, data and resources for "Evolution of a thinning trial for Mediterranean mixed pine stands (Pinus halepensis x Pinus pinea)"'
+version: 1.0.0
+doi: 
+date-released: 2026-09-29
+url: "https://github.com/aitorvv/thinning_trial_Mediterranean_mixed_pine_stands"
